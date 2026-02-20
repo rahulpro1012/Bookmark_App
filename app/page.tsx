@@ -54,7 +54,11 @@ export default function Home() {
         { event: "*", schema: "public", table: "bookmarks" },
         (payload) => {
           if (payload.eventType === "INSERT") {
-            setBookmarks((prev) => [...prev, payload.new as Bookmark]);
+            setBookmarks((prev) => {
+              // Check if it's already in the list to prevent duplicates
+              if (prev.some((b) => b.id === payload.new.id)) return prev;
+              return [...prev, payload.new as Bookmark];
+            });
           } else if (payload.eventType === "DELETE") {
             setBookmarks((prev) => prev.filter((b) => b.id !== payload.old.id));
           }
@@ -77,15 +81,27 @@ export default function Home() {
     e.preventDefault();
     if (!user) return;
 
-    const { error } = await supabase.from("bookmarks").insert({
-      title: newTitle,
-      url: newUrl,
-      user_id: user.id,
-    });
+    // Add .select().single() to get the newly created database row back
+    const { data, error } = await supabase
+      .from("bookmarks")
+      .insert({
+        title: newTitle,
+        url: newUrl,
+        user_id: user.id,
+      })
+      .select()
+      .single();
 
-    if (!error) {
+    if (!error && data) {
       setNewTitle("");
       setNewUrl("");
+
+      // Instantly update the UI for the user who added it
+      setBookmarks((prev) => {
+        // Prevent duplicates just in case realtime fires at the exact same time
+        if (prev.some((b) => b.id === data.id)) return prev;
+        return [...prev, data];
+      });
     }
   };
 
