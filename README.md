@@ -101,4 +101,4 @@ This project is ready for deployment on Vercel. Connect your repository to Verce
 
 ## Live Demo
 
-- Vercel: https://bookmark-app-dusky.vercel.app/ (replace with your project's URL)
+- Vercel: https://bookmark-app-dusky.vercel.app/ 
